@@ -135,6 +135,24 @@ class SuperuserRequiredMixin(object):
             *args, **kwargs)
 
 
+class StaffRequiredMixin(object):
+    login_url = settings.LOGIN_URL
+    raise_exception = False
+    redirect_field_name = REDIRECT_FIELD_NAME
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            if self.raise_exception:
+                return HttpResponseForbidden()
+            else:
+                path = urlquote(request.get_full_path())
+                tup = self.login_url, self.redirect_field_name, path
+                return HttpResponseRedirect("%s?%s=%s" % tup)
+
+        return super(StaffRequiredMixin, self).dispatch(request,
+            *args, **kwargs)
+
+
 class SetHeadlineMixin(object):
     """
     Mixin allows you to set a static headline through a static property on the
